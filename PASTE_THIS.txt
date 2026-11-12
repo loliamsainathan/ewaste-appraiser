@@ -1,0 +1,16 @@
+Read my GitHub repo loliamsainathan/ewaste-appraiser.
+
+It is a FastAPI + vanilla-JS PWA. You photograph e-waste; Gemini vision
+identifies it; the app values the recoverable minerals in INR and reports CO2
+avoided. Built for a user in Chennai, India. No JS framework, no build step.
+
+HANDOFF.md in the repo root has the full brief — read section 6 (gotchas)
+BEFORE changing anything.
+
+First task: add retry-with-backoff to the Gemini call in engine/vision.py.
+Today a transient 503 silently falls back to the offline heuristic, which
+produces visibly wrong answers (a banana has been identified as "newspaper").
+Do 2-3 retries, then fall back.
+
+Second: help me deploy to Render for a permanent URL. Procfile, render.yaml,
+requirements.txt and runtime.txt are already in the repo.
