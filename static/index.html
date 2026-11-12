@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta name="theme-color" content="#0B0F0C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="/manifest.json">
+<title>E-Waste Value Appraiser</title>
+<link rel="stylesheet" href="/vendor/leaflet.css">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<!-- ============================================================ HOME -->
+<section class="screen active" id="screen-home">
+  <header class="topbar">
+    <div>
+      <h1 class="brand">E-Waste <span>Value Appraiser</span></h1>
+      <p class="tagline">Point. Shoot. Know what it is worth.</p>
+    </div>
+    <div class="engbadge" id="engine-badge">heuristic</div>
+  </header>
+
+  <div class="statstrip" id="statstrip">
+    <div class="stat"><b id="st-scans">0</b><span>scans</span></div>
+    <div class="stat"><b id="st-kg">0</b><span>kg</span></div>
+    <div class="stat"><b id="st-val">0</b><span>value</span></div>
+    <div class="stat tappable" id="st-co2-box"><b id="st-co2">0</b><span>CO2 kg ?</span></div>
+  </div>
+
+  <div class="bigcards">
+    <button class="bigcard scan" id="go-scan">
+      <svg viewBox="0 0 24 24" class="ico"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><rect x="8" y="8" width="8" height="8" rx="2"/></svg>
+      <b>SCAN</b><span>Identify &amp; appraise</span>
+    </button>
+    <button class="bigcard map" id="go-map">
+      <svg viewBox="0 0 24 24" class="ico"><path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+      <b>MAP</b><span>Drop pin &amp; find recyclers</span>
+    </button>
+  </div>
+
+  <div class="quickcats" id="quickcats"></div>
+
+  <h3 class="sechead">Recent scans</h3>
+  <div id="recent" class="recent"></div>
+</section>
+
+<!-- ============================================================ SCAN -->
+<section class="screen" id="screen-scan">
+  <header class="topbar simple">
+    <button class="back" data-back>&larr;</button>
+    <h2>Scan an item</h2>
+    <span></span>
+  </header>
+
+  <div class="camwrap">
+    <video id="video" playsinline autoplay muted></video>
+    <canvas id="canvas" hidden></canvas>
+    <img id="preview" hidden alt="captured">
+    <div class="reticle"><div class="corner tl"></div><div class="corner tr"></div>
+      <div class="corner bl"></div><div class="corner br"></div>
+      <p class="hint">Centre the item &mdash; or upload a photo</p>
+    </div>
+  </div>
+
+  <div class="scanmodes">
+    <button class="chip active" data-hint="electronic">Auto detect</button>
+    <button class="chip" data-hint="e">Force e-waste</button>
+    <button class="chip" data-hint="w">Force general</button>
+  </div>
+
+  <div class="scanactions">
+    <button class="ghost" id="btn-upload">Upload</button>
+    <button class="shutter" id="btn-capture" aria-label="Capture"></button>
+    <button class="ghost" id="btn-switch">Flip</button>
+  </div>
+  <input type="file" id="file" accept="image/*" hidden>
+
+  <div id="scanmsg" class="scanmsg"></div>
+</section>
+
+<!-- ========================================================== RESULT -->
+<section class="screen" id="screen-result">
+  <header class="topbar simple">
+    <button class="back" data-back>&larr;</button>
+    <h2>Appraisal</h2>
+    <button class="ghost sm" id="btn-rescan">Rescan</button>
+  </header>
+  <div id="result-body" class="resultbody"></div>
+</section>
+
+<!-- ============================================================= MAP -->
+<section class="screen" id="screen-map">
+  <header class="topbar simple">
+    <button class="back" data-back>&larr;</button>
+    <h2>Waste map</h2>
+    <button class="ghost sm" id="btn-locate">Locate</button>
+  </header>
+  <div id="map"></div>
+  <div class="mapfilters" id="mapfilters">
+    <button class="chip active" data-layer="recyclers">Recyclers</button>
+    <button class="chip active" data-layer="reports">Reports</button>
+    <button class="chip active" data-layer="listings">Listings</button>
+    <button class="chip" data-layer="heat">Heatmap</button>
+  </div>
+  <button class="fab" id="btn-droppin">+</button>
+</section>
+
+<!-- ========================================================= SETTINGS -->
+<section class="screen" id="screen-settings">
+  <header class="topbar simple"><span></span><h2>Settings</h2><span></span></header>
+  <div class="settings">
+    <h3 class="sechead">Analysis engine</h3>
+    <p class="note" id="engine-note"></p>
+
+    <h3 class="sechead">Recovery cost (Rs per kg of feed)</h3>
+    <div id="ed-costs"></div>
+
+    <h3 class="sechead">Processing route cost (Rs per kg)</h3>
+    <p class="note">Charged per item type &mdash; refining a PCB costs far more per kg
+      than shredding a steel appliance.</p>
+    <div id="ed-proc"></div>
+
+    <h3 class="sechead">Metals &mdash; price, recovery %, CO2 factor</h3>
+    <p class="note">Price shows Rs/g for precious metals, Rs/kg otherwise.
+      CO2 factor = kg of CO2 avoided per kg of that metal recycled.</p>
+    <div id="ed-metals"></div>
+
+    <h3 class="sechead">Devices &mdash; weight (g) &amp; mineral yield</h3>
+    <select id="dev-pick" class="pickrow"></select>
+    <div id="ed-dev"></div>
+
+    <h3 class="sechead">General waste &mdash; weight (g) &amp; rate (Rs/kg)</h3>
+    <div id="ed-items"></div>
+
+    <h3 class="sechead">Data</h3>
+    <button class="ghost" id="btn-clear">Clear scan history</button>
+    <button class="ghost warnbtn" id="btn-reset">Reset all numbers to defaults</button>
+
+    <h3 class="sechead">About</h3>
+    <p class="note">Metal prices captured <b id="price-date">-</b> from published Indian
+      market rates. Recovery yields are published PCB / device assay ranges.
+      All figures are <b>estimates, not a guaranteed payout</b>.</p>
+  </div>
+</section>
+
+<!-- ======================================================= TAB BAR -->
+<nav class="tabbar">
+  <button class="tab active" data-screen="screen-home">
+    <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg><span>Home</span></button>
+  <button class="tab" data-screen="screen-scan">
+    <svg viewBox="0 0 24 24"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/></svg><span>Scan</span></button>
+  <button class="tab" data-screen="screen-map">
+    <svg viewBox="0 0 24 24"><path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><span>Map</span></button>
+  <button class="tab" data-screen="screen-settings">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg><span>Settings</span></button>
+</nav>
+
+<!-- ==================================================== PIN MODAL -->
+<div class="modal" id="modal-pin" hidden>
+  <div class="sheet">
+    <h3>Drop a pin</h3>
+    <p class="note" id="pin-address">Locating…</p>
+    <div class="segmented">
+      <button class="seg active" data-mode="report">Report dumping</button>
+      <button class="seg" data-mode="listing">List my e-waste</button>
+    </div>
+    <div id="pin-fields"></div>
+    <div class="sheetbtns">
+      <button class="ghost" data-close>Cancel</button>
+      <button class="primary" id="btn-publish">Publish</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="/vendor/leaflet.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

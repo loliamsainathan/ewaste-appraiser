@@ -1,0 +1,57 @@
+E-Waste Value Appraiser — phone link
+====================================
+
+CURRENT URL
+  https://a898c079712604.lhr.life
+
+Open that on your phone. It is HTTPS, so the camera and GPS will work.
+
+INSTALL AS AN APP (works offline afterwards)
+  Android / Chrome : open the URL -> menu -> "Install app" / "Add to Home screen"
+  iPhone / Safari  : open the URL -> Share -> "Add to Home Screen"
+
+WHY THE LINK KEEPS CHANGING
+  The app runs inside a sandbox that periodically shuts down background
+  processes. When that happens the Cloudflare tunnel dies and a NEW random
+  URL is issued on restart. There is no way to keep a fixed address from
+  inside the sandbox.
+
+  If the link stops working, ask me to re-issue it and I will put a fresh
+  one here. It takes about a minute.
+
+FOR A PERMANENT LINK  (recommended - files are ready)
+  I have already added the deployment files to this folder:
+    Procfile  render.yaml  requirements.txt  runtime.txt  DEPLOY.md
+  Deploy free to Render, Railway or Fly.io and you get a FIXED url that
+  survives restarts. No more chasing dead links.
+  Full step-by-step instructions are in DEPLOY.md (open that file).
+  I verified the app boots with no API key and degrades to the offline
+  estimate, so a deploy cannot break - it just loses AI naming until you
+  set AI_API_KEY in the host's environment settings.
+
+WHAT IS RUNNING
+  App server : uvicorn on port 8000, AI_PROVIDER=gemini
+  Vision     : gemini flash family (auto-falls-back across models)
+  Tunnel     : localhost.run (SSH) -> https://a898c079712604.lhr.life
+               cloudflared is the automatic fallback if this dies
+
+CHOOSING THE AI'S ANSWER
+  After a scan, the AI's identification is the FIRST option in the "Is this
+  right?" list, marked with a lightning bolt, using the AI's own wording.
+
+  If the object is not in the catalogue the app still lets you pick it - it
+  falls back to a generic profile (mixed electronics / general waste) while
+  keeping the AI's name on screen. You can always refine with the dropdown.
+
+  Wording is also fuzzy-matched, so "banana peel" resolves to the catalogue's
+  "Fruit / vegetable peel" instead of being thrown away.
+
+IF THE APP LOOKS OLD OR A FIX IS MISSING
+  The app installs offline support, which can keep an old copy.
+  Chrome/Android: menu -> "Reload" or long-press reload.
+  Safari/iOS: swipe down on the page, or Settings -> Safari -> Clear History.
+  The offline layer is now set to serve app code from the network first, so a
+  normal reload picks up new code. Old caches are cleared automatically.
+
+  The Gemini key lives in /home/user/ewaste_app/.aikey (chmod 600) and is
+  never exposed to the browser.

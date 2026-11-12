@@ -1,0 +1,15 @@
+# secret - the Gemini API key. Never commit this.
+.aikey
+.env
+
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# local runtime data
+data.db
+tilecache/
+
+.DS_Store

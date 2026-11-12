@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: ewaste-appraiser
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.4"
+      - key: AI_PROVIDER
+        value: gemini
+      # paste your Gemini key here in the Render dashboard.
+      # mark it as a secret - never commit it to git.
+      - key: AI_API_KEY
+        sync: false
+      # without this the AI silently falls back to the offline guess
+      - key: PYTHONUNBUFFERED
+        value: "1"
