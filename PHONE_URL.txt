@@ -2,7 +2,7 @@ E-Waste Value Appraiser — phone link
 ====================================
 
 CURRENT URL
-  https://a27348aa7d6763.lhr.life
+  https://4b82ffc18890f0.lhr.life
 
 Open that on your phone. It is HTTPS, so the camera and GPS will work.
 
@@ -32,7 +32,7 @@ FOR A PERMANENT LINK  (recommended - files are ready)
 WHAT IS RUNNING
   App server : uvicorn on port 8000, AI_PROVIDER=gemini
   Vision     : gemini flash family (auto-falls-back across models)
-  Tunnel     : localhost.run (SSH) -> https://a27348aa7d6763.lhr.life
+  Tunnel     : localhost.run (SSH) -> https://4b82ffc18890f0.lhr.life
                cloudflared is the automatic fallback if this dies
 
 CHOOSING THE AI'S ANSWER
