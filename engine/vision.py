@@ -321,7 +321,7 @@ def classify_with_ai(image_bytes, features):
                 models = [_working_model]
             else:
                 models = GEMINI_MODELS
-                      import time
+            import time
             last, txt = "", None
             for model in models:
                 url = ("https://generativelanguage.googleapis.com/v1beta/models/"
