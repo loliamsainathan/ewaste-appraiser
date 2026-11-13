@@ -321,17 +321,36 @@ def classify_with_ai(image_bytes, features):
                 models = [_working_model]
             else:
                 models = GEMINI_MODELS
-            last = ""
+                      import time
+            last, txt = "", None
             for model in models:
                 url = ("https://generativelanguage.googleapis.com/v1beta/models/"
                        f"{model}:generateContent")
-                r = requests.post(url, json=body, headers=head, timeout=25)
-                if r.ok:
-                    globals()["_working_model"] = model
-                    txt = r.json()["candidates"][0]["content"]["parts"][0]["text"]
+                # Gemini hands out transient 503s and can be slow on a cold
+                # start. Retry with backoff: falling straight through to the
+                # offline heuristic yields confidently WRONG identifications
+                # (a banana has come back as "newspaper"), which is far worse
+                # than making the user wait a few extra seconds.
+                for attempt in range(3):
+                    try:
+                        r = requests.post(url, json=body, headers=head,
+                                          timeout=45)
+                    except Exception as exc:
+                        last = f"{model}: {type(exc).__name__}"
+                        time.sleep(1.5 * (2 ** attempt))
+                        continue
+                    if r.ok:
+                        globals()["_working_model"] = model
+                        txt = r.json()["candidates"][0]["content"]["parts"][0]["text"]
+                        break
+                    last = f"{model}: HTTP {r.status_code} {r.text[:120]}"
+                    if r.status_code in (429, 500, 502, 503, 504):
+                        time.sleep(1.5 * (2 ** attempt))
+                        continue
+                    break          # 400/403/404 - this model is not usable
+                if txt:
                     break
-                last = f"{model}: HTTP {r.status_code} {r.text[:160]}"
-            else:
+            if not txt:
                 raise RuntimeError("no usable Gemini model - " + last)
         else:
             url = "https://api.openai.com/v1/chat/completions"
