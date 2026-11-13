@@ -355,10 +355,14 @@ function icon(color) {
 async function initMap() {
   if (S.map) { S.map.invalidateSize(); return; }
   S.map = L.map('map', { zoomControl: false }).setView([S.home.lat, S.home.lng], 12);
-  // Same-origin tiles: the server proxies a real tile provider with a browser
-  // UA and rejects the placeholder stubs these services hand to datacenters.
-  L.tileLayer('/tiles/{z}/{x}/{y}.png', {
+  // Tiles load straight from the provider in the browser. They used to be
+  // proxied through the server, but hosts like Render share an outbound IP and
+  // get rate-limited into receiving blank placeholder tiles. A real browser
+  // sends a real User-Agent, so it gets the real tile.
+  L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+    subdomains: 'abc',
     maxZoom: 17,
+    crossOrigin: true,
     attribution: '&copy; OpenStreetMap contributors | style &copy; OpenTopoMap'
   }).addTo(S.map);
   L.control.zoom({ position: 'bottomright' }).addTo(S.map);
